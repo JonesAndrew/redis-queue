@@ -1,0 +1,34 @@
+#pragma once
+#include <cpp_redis/cpp_redis>
+
+namespace rq {
+    class QueueClient {
+    protected:
+        cpp_redis::redis_client client;
+    public:
+        QueueClient();
+
+        std::vector<std::string> getQueues();
+
+        void size(std::string queue);
+        void send(std::string queue, std::string task);
+
+        void cleanOldQueues();
+        void unAck(std::string worker);
+    };
+
+    class QueueWorker : public QueueClient {
+    protected:
+        std::string name;
+        std::map<std::string, std::function<void(std::vector<std::string>)> > functions;
+    public:
+        QueueWorker(std::string name);
+
+        void ack();
+
+        void process(std::string queue);
+        void finished(std::string queue, std::string task);
+
+        void addTask(std::string task, std::function<void(std::vector<std::string>)> f);
+    };
+}
